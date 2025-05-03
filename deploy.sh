@@ -1,17 +1,8 @@
 #!/bin/bash
 
 # Source config script
-source config.parameters_all
-
-# Prompt the user for the HPC partition name
-read -p "Enter your preferred HPC partition name: " HPC_partition
-
-# Prompt the user for the species identifier name
-read -p "Please enter unique run ID: " run_id
-
-# Export the run_id identifier
-export HPC_partition
-export run_id
+source arguments_param
+source config.parameters
 
 # Step 1: Rename and count file
 # -- Copy raw data files from sourcedir to rawdir.
@@ -20,7 +11,7 @@ export run_id
 # WORK: rawdir
 # OUTPUT: null
 # PROCESS - File transfer
-# sbatch -d singleton --error="${log}/1-rename_count_%J.err" --output="${log}/1-rename_count_%J.out" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/1-rename.sh"
+# sbatch -d singleton --error="${log}/1-rename_count_%J.err" --output="${log}/1-rename_count_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/1-rename.sh"
 
 # Get number of samples
 sample_number=$(find "${rawdir}" -maxdepth 1 -name "*_1.fastq.gz" | wc -l)
@@ -40,9 +31,7 @@ fi
 # PROCESS - FastQC raw data
 # qcfiles=${rawdir}
 # export qcfilesi
-sbatch -d singleton --error="${log}/2-rawqc_%J.err" --output="${log}/2-rawqc_%J.out" --array="1-${sample_number}%20" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/2-fastqc_array.sh"
-
-exit
+sbatch -d singleton --error="${log}/2-rawqc_%J.err" --output="${log}/2-rawqc_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/2-fastqc_array.sh"
 
 # Step 3: Fastp trimming
 # -- Trim adapters and low-quality bases from raw data using Fastp.
@@ -51,7 +40,7 @@ exit
 # WORK: trimdir, qcdir
 # OUTPUT: null
 # PROCESS - trim
-sbatch -d singleton --error="${log}/3-fastp_%J.err" --output="${log}/3-fastp_%J.out" --"array=1-${sample_number}%20" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/3-fastp_array.sh"  
+sbatch -d singleton --error="${log}/3-fastp_%J.err" --output="${log}/3-fastp_%J.out" --"array=1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/3-fastp_array.sh"  
 
 # Step 4: FastQC on trimmed data
 # -- Run FastQC on raw data to assess data quality before trimming.
@@ -62,7 +51,7 @@ sbatch -d singleton --error="${log}/3-fastp_%J.err" --output="${log}/3-fastp_%J.
 # PROCESS - FastQC raw data
 # qcfiles=${rawdir}
 # export qcfilesi
-sbatch -d singleton --error="${log}/4-trimqc_%J.err" --output="${log}/4-trimqc_%J.out" --array="1-${sample_number}%20" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/4-fastqc-trim.sh"
+sbatch -d singleton --error="${log}/4-trimqc_%J.err" --output="${log}/4-trimqc_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/4-fastqc-trim.sh"
 
 # Step 5: kraken
 # Map reads to database.
@@ -72,9 +61,11 @@ sbatch -d singleton --error="${log}/4-trimqc_%J.err" --output="${log}/4-trimqc_%
 # OUTPUT: null
 # PROCESS - map raw reads against database for biodiversoty classification
 # export 
-sbatch -d singleton --error="${log}/5A-krakendb_%J.err" --output="${log}/5A-krakendb_%J.out" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/5A-krakendownload.sh"
-sbatch -d singleton --error="${log}/5B-kraken_%J.err" --output="${log}/5B-kraken_%J.out" --array="1-${sample_number}%2" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/5B-kraken_array.sh"
-sbatch -d singleton --error="${log}/5C-kraken_merge_%J.err" --output="${log}/5D-kraken_merge_%J.out" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/5C-kraken_merge.sh"
+sbatch -d singleton --error="${log}/5A-krakendb_%J.err" --output="${log}/5A-krakendb_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/5A-krakendownload.sh"
+
+sbatch -d singleton --error="${log}/5B-kraken_%J.err" --output="${log}/5B-kraken_%J.out" --array="1-${sample_number}%2" --job-name=${NAME} --partition=${PART} "${moduledir}/5B-kraken_array.sh"
+
+sbatch -d singleton --error="${log}/5C-kraken_merge_%J.err" --output="${log}/5D-kraken_merge_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/5C-kraken_merge.sh"
 
 # Step 6: Bracken
 # Normalise kraken read counts
@@ -84,8 +75,9 @@ sbatch -d singleton --error="${log}/5C-kraken_merge_%J.err" --output="${log}/5D-
 # OUTPUT: null
 # PROCESS - Normalise kraken read counts
 # export
-sbatch -d singleton --error="${log}/6A-bracken_%J.err" --output="${log}/6A-bracken_%J.out" --array="1-${sample_number}%20" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/6A-bracken_array.sh"
-sbatch -d singleton --error="${log}/6B-bracken_merge_%J.err" --output="${log}/6B-bracken_merge_%J.out" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/6B-bracken_merge.sh"
+sbatch -d singleton --error="${log}/6A-bracken_%J.err" --output="${log}/6A-bracken_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/6A-bracken_array.sh"
+
+sbatch -d singleton --error="${log}/6B-bracken_merge_%J.err" --output="${log}/6B-bracken_merge_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/6B-bracken_merge.sh"
 
 # Step 7: krona plots creation
 # Normalise kraken read counts
@@ -95,7 +87,7 @@ sbatch -d singleton --error="${log}/6B-bracken_merge_%J.err" --output="${log}/6B
 # OUTPUT: html
 # PROCESS - Intercation krona diversity plaot
 # export
-sbatch -d singleton --error="${log}/7-krona_%J.err" --output="${log}/7-krona_%J.out" --array="1-${sample_number}%20" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/7-krona_array.sh"
+sbatch -d singleton --error="${log}/7-krona_%J.err" --output="${log}/7-krona_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/7-krona_array.sh"
 
 # Step 8: MetaPhlAn
 # Map reads to database.
@@ -105,11 +97,11 @@ sbatch -d singleton --error="${log}/7-krona_%J.err" --output="${log}/7-krona_%J.
 # OUTPUT: null
 # PROCESS - map raw reads against database for biodiversoty classification
 # export
-sbatch -d singleton --error="${log}/8A-metaphlandb_%J.err" --output="${log}/8A-metaphlandb_%J.out" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/8A-metaphlandb_download.sh"
+sbatch -d singleton --error="${log}/8A-metaphlandb_%J.err" --output="${log}/8A-metaphlandb_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/8A-metaphlandb_download.sh"
 
-sbatch -d singleton --error="${log}/8B-metaphlan_%J.err" --output="${log}/8B-metaphlan_%J.out" --array="1-${sample_number}%8" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/8B-metaphlan_array.sh"
+sbatch -d singleton --error="${log}/8B-metaphlan_%J.err" --output="${log}/8B-metaphlan_%J.out" --array="1-${sample_number}%8" --job-name=${NAME} --partition=${PART} "${moduledir}/8B-metaphlan_array.sh"
 
-sbatch -d singleton --error="${log}/8C-metaphlan_post_%J.err" --output="${log}/8C-metaphlan_post_%J.out" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/8C-metaphan_post.sh"
+sbatch -d singleton --error="${log}/8C-metaphlan_post_%J.err" --output="${log}/8C-metaphlan_post_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/8C-metaphan_post.sh"
 
 # Step X: MultiQC report
 # -- Generate a MultiQC report to summarize the results of all previous steps.
@@ -118,5 +110,5 @@ sbatch -d singleton --error="${log}/8C-metaphlan_post_%J.err" --output="${log}/8
 # WORK: multiqc
 # OUTPUT: multiqc
 # PROCESS - multiqc
-sbatch -d singleton --error="${log}/multiqc_%J.err" --output="${log}/multiqc_%J.out" --job-name=${run_id} --partition=${HPC_partition} "${moduledir}/X-multiqc.sh"
+sbatch -d singleton --error="${log}/multiqc_%J.err" --output="${log}/multiqc_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/X-multiqc.sh"
 

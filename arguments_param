@@ -1,0 +1,85 @@
+#!/bin/bash
+#arguments of parameters for metagenomic slurm pipeline
+
+# Initialize variables
+NAME=""
+PART=""
+workdir=$(pwd)/work
+
+# Allowed environments
+VALID_PART=("epyc" "defq" "jumbo" "epyc_ssd")
+
+# Validate partition
+validate_partition() {
+  for valid in "${VALID_PART[@]}"; do
+    [[ "$1" == "$valid" ]] && return 0
+  done
+  return 1
+}
+
+# Help message
+print_help() {
+  echo "Usage: $0 --name NAME [--env ENV] [--partition PARTITION]"
+  echo ""
+  echo "Options:"
+  echo "  -n, --name          REQUIRED: Run name or deployment name - should be unique"
+  echo "  -w, --work          Optional: working dir - default is current dir /work/"
+  echo "  -p, --partition     Optional: Avalible partition / hpc queue (epyc, defq, jumbo, epyc_ssd)"
+  echo "  -h, --help          Show this help message"
+  exit 0
+}
+
+# Use `getopt` to parse options
+PARSED=$(getopt -o n:w:p:h --long name:,env:,port:,help -- "$@")
+if [[ $? -ne 0 ]]; then
+  echo "Failed to parse options." >&2
+  exit 1
+fi
+
+# Reorganize the positional parameters
+eval set -- "$PARSED"
+
+# Process options
+while true; do
+  case "$1" in
+    -n|--name) NAME="$2"; shift 2 ;;
+    -w|--work)  workdir="$2"; shift 2 ;;
+    -p|--partition) PART="$2"; shift 2 ;;
+    -h|--help) print_help ;;
+    --) shift; break ;;
+    *) echo "Unexpected option: $1" >&2; exit 1 ;;
+  esac
+done
+
+# Check if name is set (required)
+if [[ -z "$NAME" ]]; then
+  echo "Error: --name is required - unque run name."
+  echo "Use --help for usage."
+  exit 1
+fi
+
+# Check if partition is set (required)
+if [[ -z "$PART" ]]; then
+  echo "Error: --partition is required - define the partition / hpc queue."
+  echo "Use --help for usage."
+  exit 1
+fi
+
+# Validate partition if provided
+if [[ -n "$PART" ]] && ! validate_partition "$PART"; then
+  echo "Error: Invalid parition '$PART'."
+  echo "Allowed partitions: ${VALID_PART[*]}"
+  exit 1
+fi
+
+# Output arguments
+echo "Run name (unique): $NAME"
+echo "Partition: ${PART}"
+echo "Working directory: ${workdir}"
+
+#export arguements
+export NAME
+export PART
+export workdir
+
+

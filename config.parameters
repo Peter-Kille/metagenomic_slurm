@@ -1,0 +1,166 @@
+#!/bin/bash
+
+# Define core parameters - rawdata, pipedir, moduledir, assembly_name
+# sourcedir="/path/to/rawreads/"
+pipedir=$(pwd -P)
+
+moduledir="${pipedir}/modules"
+scriptdir="${moduledir}/scripts"
+
+## Make workdir and output directories
+outdir="${pipedir}/outdir"
+log="${workdir}/log"
+singularitydir="${pipedir}/singularities"
+
+# Create Singularity cache directory in /tmp and set environment variables
+if [[ ! -d "${singularitydir}" ]]; then
+        mkdir -p "${singularitydir}"
+fi
+
+if [[ ! -d "${singularitydira}/cache" ]]; then
+        mkdir -p "${singularitydir}/cache"
+fi
+
+export APTAINERAPTAINER_CACHEDIR=${singularitydir}/cache
+export APPTAINER_CACHEDIR=${singularitydir}/cache
+
+#create output directories if not present
+
+if [[ ! -d ${workdir} ]]; then 
+	mkdir -p ${workdir}
+fi
+
+if [[ ! -d "${outdir}" ]]; then 
+	mkdir -p "${outdir}" 
+fi
+
+if [[ ! -d "${log}" ]]; then
+        mkdir -p "${log}"
+fi
+
+# Export core parameters
+export sourcedir
+export pipedir
+export workdir
+export outdir
+export moduledir
+export log
+export sample_number
+export singularitydir
+export scriptdir
+
+# Step 1: Rename and Count
+rawdir="${pipedir}/raw_data"
+if [[ ! -d "${rawdir}" ]]; then 
+	mkdir -p "${rawdir}" 
+fi
+export rawdir
+
+# STEP 2: fastqc on raw data
+qcdir="${workdir}/rawqc" 
+if [[ ! -d "${qcdir}" ]]; then 
+	mkdir -p "${qcdir}" 
+fi
+fastqc_module="fastqc/v0.11.9"
+module is-avail ${fastqc_module} || { echo "${fastqc_module} not avalible check config.parameters_all file" ; exit 1; }
+export fastqc_module
+export qcdir
+
+# STEP 3:
+trimdir="${workdir}/trim_files" 
+if [[ ! -d "${trimdir}" ]]; then 
+	mkdir -p "${trimdir}" 
+fi
+fastp_module="fastp/v0.20"
+module is-avail ${fastp_module} || { echo "${fastp_module} not avalible check config.parameters_all file" ; exit 1; }
+export fastp_module
+export trimdir
+
+#STEP 4:
+trimqc="${workdir}/trimqc"
+if [[ ! -d "${trimqc}" ]]; then
+        mkdir -p "${trimqc}"
+fi
+fastqc_module="fastqc/v0.11.9"
+module is-avail ${fastqc_module} || { echo "${fastqc_module} not avalible check config.parameters_all file" ; exit 1; }
+export fastqc_module
+export trimqc
+
+# STEP 5:
+krakendir="${workdir}/kraken"
+if [[ ! -d "${krakendir}" ]]; then
+        mkdir -p "${krakendir}"
+fi
+
+krakendbdir="${workdir}/kraken/db"
+if [[ ! -d "${krakendbdir}" ]]; then
+        mkdir -p "${krakendbdir}"
+fi
+kraken_module="kraken2/2.1.1"
+module is-avail ${kraken_module} || { echo "${kraken_module} not avalible check config.parameters_all file" ; exit 1; }
+export kraken_module
+python_module="python/3.7.4"
+module is-avail ${python_module} || { echo "${python_module} not avalible check config.parameters_all file" ; exit 1; }
+export python_module
+krakendb="k2_standard_08gb_20250402"
+export krakendir
+export krakendb
+export krakendbdir
+
+# STEP 6:
+brackendir="${workdir}/bracken"
+if [[ ! -d "${brackendir}" ]]; then
+        mkdir -p "${brackendir}"
+fi
+bracken_module="bracken/2.6.0"
+module is-avail ${bracken_module} || { echo "${bracken_module} not avalible check config.parameters_all file" ; exit 1; }
+export bracken_module
+python_module="python/3.7.4"
+module is-avail ${python_module} || { echo "${python_module} not avalible check config.parameters_all file" ; exit 1; }
+export python_module
+read_len=150
+level="S"
+export brackendir
+export level
+export read_len
+
+# STEP 7:
+kronadir="${workdir}/krona"
+if [[ ! -d "${kronadir}" ]]; then
+        mkdir -p "${kronadir}"
+fi
+krona_module="krona/2.8"
+module is-avail ${krona_module} || { echo "${krona_module} not avalible check config.parameters_all file" ; exit 1; }
+export krona_module
+python_module="python/3.7.4"
+module is-avail ${python_module} || { echo "${python_module} not avalible check config.parameters_all file" ; exit 1; }
+export python_module
+export kronadir
+
+# STEP 8:
+metaphlandir="${workdir}/metaphlan"
+if [[ ! -d "${metaphlandir}" ]]; then
+        mkdir -p "${metaphlandir}"
+fi
+
+metaphlandbdir="${workdir}/metaphlan/db"
+if [[ ! -d "${metaphlandbdir}" ]]; then
+        mkdir -p "${metaphlandbdir}"
+fi
+metaphlan_module="py-metaphlan/4.1.1-w27j3rs"
+module is-avail ${metaphlan_module} || { echo "${metaphlan_module} not avalible check config.parameters_all file" ; exit 1; }
+export metaphlan_module
+
+export metaphlandir
+export metaphlandbdir
+
+# STEP X:
+multiqcdir="${workdir}/multiqc"
+if [[ ! -d "${multiqcdir}" ]]; then
+        mkdir -p "${multiqcdir}"
+fi
+
+multiqc_module="multiqc/1.9"
+module is-avail ${multiqc_module} || { echo "${multiqc_module} not avalible check config.parameters_all file" ; exit 1; }
+export multiqc_module
+export multiqcdir
