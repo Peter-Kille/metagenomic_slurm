@@ -18,17 +18,15 @@ echo "\$SLURM_MEM_PER_CPU=${SLURM_MEM_PER_CPU}"
 cat $0
 
 module load ${krona_module}
-module load ${python_module}
+module load ${qiime_module}
 
 file=$(ls "${rawdir}"/*_1.fastq.gz | sed -n ${SLURM_ARRAY_TASK_ID}p)
 
 R1=$(basename $file | cut -f1 -d.)
 base=$(echo $R1 | sed 's/_1$//')
 
-python ${scriptdir}/kreport2krona.py -r ${krakendir}/${base}.kraken.report -o ${kronadir}/${base}_kraken.krona
-ktImportText ${kronadir}/${base}_kraken.krona -o ${kronadir}/${base}_kraken.krona.html
- 
-##generate mpa reports
-python ${scriptdir}/kreport2mpa.py -r ${krakendir}/${base}.kraken.report -o ${krakendir}/${base}_kraken_MPA_count.txt
-python ${scriptdir}/kreport2mpa.py --percentages -r ${krakendir}/${base}.kraken.report -o ${krakendir}/${base}_kraken_MPA_per.txt
- 
+biom convert -i ${metaphlandir}/${base}.biom -o ${kronadir}/${base}_metaphlan_table.txt --to-tsv --header-key taxonomy
+
+tail -n +2 ${kronadir}/${base}_metaphlan_table.txt | cut -f2- | sed 's/; /\t/g' > ${kronadir}/${base}_metaphlan_krona_input.txt
+
+ktImportText ${kronadir}/${base}_metaphlan_krona_input.txt -o ${kronadir}/${base}_metaphlan.krona.html

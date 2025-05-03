@@ -17,34 +17,18 @@ echo "\$SLURM_MEM_PER_CPU=${SLURM_MEM_PER_CPU}"
 # Write jobscript to output file (good for reproducibility)
 cat $0
 
-module load ${bracken_module}
+module load ${krona_module}
+module load ${python_module}
 
 file=$(ls "${rawdir}"/*_1.fastq.gz | sed -n ${SLURM_ARRAY_TASK_ID}p)
 
 R1=$(basename $file | cut -f1 -d.)
 base=$(echo $R1 | sed 's/_1$//')
 
-bracken -d ${krakendbdir} \
-	-t ${SLURM_CPUS_PER_TASK} \
-        -r ${read_len} \
-        -i ${krakendir}/${base}.kraken.report \
-        -l S \
-        -o ${brackendir}/${base}_species.bracken.tsv
+python ${scriptdir}/kreport2krona.py -r ${krakendir}/${base}.kraken.report -o ${kronadir}/${base}_kraken.krona
+ktImportText ${kronadir}/${base}_kraken.krona -o ${kronadir}/${base}_kraken.krona.html
 
-bracken -d ${krakendbdir} \
-        -t ${SLURM_CPUS_PER_TASK} \
-        -r ${read_len} \
-        -i ${krakendir}/${base}.kraken.report \
-        -l G \
-        -o ${brackendir}/${base}_genus.bracken.tsv
-
-bracken -d ${krakendbdir} \
-        -t ${SLURM_CPUS_PER_TASK} \
-        -r ${read_len} \
-        -i ${krakendir}/${base}.kraken.report \
-        -l F \
-        -o ${brackendir}/${base}_family.bracken.tsv
-
-
-
-
+##generate mpa reports
+python ${scriptdir}/kreport2mpa.py -r ${krakendir}/${base}.kraken.report -o ${krakendir}/${base}_kraken_MPA_count.txt
+python ${scriptdir}/kreport2mpa.py --percentages -r ${krakendir}/${base}.kraken.report -o ${krakendir}/${base}_kraken_MPA_per.txt
+ 

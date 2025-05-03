@@ -19,4 +19,31 @@ cat $0
 
 module load ${python_module}
 
-python ${scriptdir}/combine_bracken_outputs.py --files ${brackendir}/*.bracken.tsv -o ${brackendir}/bracken_analytic_matrix_${level}.csv
+python ${scriptdir}/combine_bracken_outputs.py --files ${brackendir}/*_species.bracken.tsv -o ${brackendir}/${NAME}_bracken_analytic_matrix_species.csv
+
+python ${scriptdir}/combine_bracken_outputs.py --files ${brackendir}/*_genus.bracken.tsv -o ${brackendir}/${NAME}_bracken_analytic_matrix_genus.csv
+
+python ${scriptdir}/combine_bracken_outputs.py --files ${brackendir}/*_family.bracken.tsv -o ${brackendir}/${NAME}_bracken_analytic_matrix_family.csv
+
+for div in Sh BP Si ISi F; do touch ${brackendir}/${div}_diversity.txt; done
+
+for file in "${rawdir}"/*_1.fastq.gz 
+do
+
+R1=$(basename $file | cut -f1 -d.)
+base=$(echo $R1 | sed 's/_1$//')
+
+for div in Sh BP Si ISi F; do
+
+printf "${base}\t" >> ${brackendir}/${div}_diversity.txt
+
+python modules/scripts/KrakenTools/KrakenTools/DiversityTools/alpha_diversity.py -f ${brackendir}/${base}_species.bracken.tsv -a ${div} >> ${brackendir}/${div}_diversity.txt
+
+printf "\n" >> ${div}_diversity.txt
+
+done
+
+done
+
+mkdir ${outdir}/bracken
+cp ${brackendir}/* ${outdir}/bracken/

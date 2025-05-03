@@ -18,6 +18,20 @@ echo "\$SLURM_MEM_PER_CPU=${SLURM_MEM_PER_CPU}"
 cat $0
 
 module load ${metaphlan_module}
+module load ${r_module}
 
-python merge_metaphlan_tables.py ${metaphlandir}/*.metagenome.txt > ${metaphlandir}/merged_abundance_table.txt
+python ${scriptdir}/merge_metaphlan_tables.py ${metaphlandir}/*.metagenome.txt > ${metaphlandir}/${NAME}_merged_abundance_table.txt
 
+#alpha diversity shannon, richness simpson, gini
+Rscript modules/scripts/calculate_diversity.R -f ${NAME}_merged_abundance_table.txt -d alpha -m shannon
+Rscript modules/scripts/calculate_diversity.R -f ${NAME}_merged_abundance_table.txt -d alpha -m simpson
+Rscript modules/scripts/calculate_diversity.R -f ${NAME}_merged_abundance_table.txt -d alpha -m richness
+Rscript modules/scripts/calculate_diversity.R -f ${NAME}_merged_abundance_table.txt -d alpha -m gini
+
+#beta diversity
+#these are not working
+
+mkdir ${outdir}/metaphlan
+rm ${metaphlandir}/*.bowtie2.bz2
+cp ${metaphlandir}/* ${outdir}/metaphlan/
+cp -R ${metaphlandir}/diversity_analysis ${outdir}/metaphlan/

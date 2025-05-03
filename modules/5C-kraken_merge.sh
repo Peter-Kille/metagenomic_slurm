@@ -19,4 +19,8 @@ cat $0
 
 module load ${python_module}
 
-python ${scriptdir}/kraken2_long_to_wide.py -i ${krakendir}/*.report -o ${krakendir}/kraken_analytic_matrix.csv
+python ${scriptdir}/kraken2_long_to_wide.py -i ${krakendir}/*.report -o ${krakendir}/${NAME}_kraken_analytic_matrix.csv
+
+rm -rf ${krakendir}/*.raw
+mkdir ${outdir}/kraken
+cp ${krakendir}/* ${outdir}/kraken/

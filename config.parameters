@@ -119,9 +119,7 @@ python_module="python/3.7.4"
 module is-avail ${python_module} || { echo "${python_module} not avalible check config.parameters_all file" ; exit 1; }
 export python_module
 read_len=150
-level="S"
 export brackendir
-export level
 export read_len
 
 # STEP 7:
@@ -151,8 +149,30 @@ metaphlan_module="py-metaphlan/4.1.1-w27j3rs"
 module is-avail ${metaphlan_module} || { echo "${metaphlan_module} not avalible check config.parameters_all file" ; exit 1; }
 export metaphlan_module
 
+r_module="r/4.4.1-gny4cpr"
+module is-avail ${r_module} || { echo "${r_module} not avalible check config.parameters_all file" ; exit 1; }
+export r_module
+
 export metaphlandir
 export metaphlandbdir
+
+# STEP 7:
+kronadir="${workdir}/krona"
+if [[ ! -d "${kronadir}" ]]; then
+        mkdir -p "${kronadir}"
+fi
+krona_module="krona/2.8"
+module is-avail ${krona_module} || { echo "${krona_module} not avalible check config.parameters_all file" ; exit 1; }
+export krona_module
+qiime_module="qiime2/2023.5"
+module is-avail ${qiime_module} || { echo "${qiime_module} not avalible check config.parameters_all file" ; exit 1; }
+export qiime_module
+export kronadir
+
+
+
+
+
 
 # STEP X:
 multiqcdir="${workdir}/multiqc"

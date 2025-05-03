@@ -87,7 +87,9 @@ sbatch -d singleton --error="${log}/6B-bracken_merge_%J.err" --output="${log}/6B
 # OUTPUT: html
 # PROCESS - Intercation krona diversity plaot
 # export
-sbatch -d singleton --error="${log}/7-krona_%J.err" --output="${log}/7-krona_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/7-krona_array.sh"
+sbatch -d singleton --error="${log}/7A-krona_%J.err" --output="${log}/7A-krona_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/7A-krona_array_kraken.sh"
+
+sbatch -d singleton --error="${log}/7B-krona_output_%J.err" --output="${log}/7B-krona_output_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/7B-krona_output.sh"
 
 # Step 8: MetaPhlAn
 # Map reads to database.
@@ -102,6 +104,18 @@ sbatch -d singleton --error="${log}/8A-metaphlandb_%J.err" --output="${log}/8A-m
 sbatch -d singleton --error="${log}/8B-metaphlan_%J.err" --output="${log}/8B-metaphlan_%J.out" --array="1-${sample_number}%8" --job-name=${NAME} --partition=${PART} "${moduledir}/8B-metaphlan_array.sh"
 
 sbatch -d singleton --error="${log}/8C-metaphlan_post_%J.err" --output="${log}/8C-metaphlan_post_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/8C-metaphan_post.sh"
+
+# Step 9: krona plots creation
+# Normalise kraken read counts
+# CORE PARAMETERS: modules, scripts, rawdir, trimdir, log
+# INPUT: kraken output,
+# WORK: kronadir
+# OUTPUT: html
+# PROCESS - Intercation krona diversity plaot
+# export
+sbatch -d singleton --error="${log}/9A-krona_metaphlan%J.err" --output="${log}/9A-krona_metaphlan%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/9A-krona_array_metaphlan.sh"
+
+sbatch -d singleton --error="${log}/9B-krona_output_%J.err" --output="${log}/9B-krona_output_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/9B-krona_output.sh"
 
 # Step X: MultiQC report
 # -- Generate a MultiQC report to summarize the results of all previous steps.
