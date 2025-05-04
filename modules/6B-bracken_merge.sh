@@ -39,8 +39,6 @@ printf "${base}\t" >> ${brackendir}/${div}_diversity.txt
 
 python modules/scripts/KrakenTools/KrakenTools/DiversityTools/alpha_diversity.py -f ${brackendir}/${base}_species.bracken.tsv -a ${div} >> ${brackendir}/${div}_diversity.txt
 
-printf "\n" >> ${div}_diversity.txt
-
 done
 
 done
