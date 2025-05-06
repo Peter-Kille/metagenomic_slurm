@@ -102,9 +102,7 @@ export kraken_module
 python_module="python/3.7.4"
 module is-avail ${python_module} || { echo "${python_module} not avalible check config.parameters_all file" ; exit 1; }
 export python_module
-krakendb="k2_standard_08gb_20250402"
 export krakendir
-export krakendb
 export krakendbdir
 
 # STEP 6:
@@ -169,11 +167,6 @@ module is-avail ${qiime_module} || { echo "${qiime_module} not avalible check co
 export qiime_module
 export kronadir
 
-
-
-
-
-
 # STEP X:
 multiqcdir="${workdir}/multiqc"
 if [[ ! -d "${multiqcdir}" ]]; then
@@ -184,3 +177,5 @@ multiqc_module="multiqc/1.9"
 module is-avail ${multiqc_module} || { echo "${multiqc_module} not avalible check config.parameters_all file" ; exit 1; }
 export multiqc_module
 export multiqcdir
+
+

@@ -34,6 +34,7 @@ Options:
   -n, --name          REQUIRED: Run name or deployment name - should be unique
   -w, --work          Optional: working dir - default is current dir /work/
   -p, --partition     Optional: Avalible partition / hpc queue (epyc, defq, jumbo, epyc_ssd)
+  -k, --kraken        Optional: Krakendb - default is "k2_standard_08gb_20250402" - **DO NOT INCLUDE .tar.gz** 
   -h, --help          Show this help message
 
 ```

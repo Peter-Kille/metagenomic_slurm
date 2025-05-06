@@ -11,7 +11,7 @@ source config.parameters
 # WORK: rawdir
 # OUTPUT: null
 # PROCESS - File transfer
-# sbatch -d singleton --error="${log}/1-rename_count_%J.err" --output="${log}/1-rename_count_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/1-rename.sh"
+sbatch -d singleton --error="${log}/1-rename_count_%J.err" --output="${log}/1-rename_count_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/1-rename.sh"
 
 # Get number of samples
 sample_number=$(find "${rawdir}" -maxdepth 1 -name "*_1.fastq.gz" | wc -l)
