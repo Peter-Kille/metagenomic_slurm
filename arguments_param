@@ -6,9 +6,10 @@ NAME=""
 PART=""
 workdir=$(pwd)/work
 krakendb="k2_standard_08gb_20250402"
+metaphlan=""
 
 # Allowed environments
-VALID_PART=("epyc" "defq" "jumbo" "epyc_ssd" "epyc -w f02-14")
+VALID_PART=("epyc" "defq" "epyc_ssd" "epyc -w f02-14")
 
 # Validate partition
 validate_partition() {
@@ -24,15 +25,16 @@ print_help() {
   echo ""
   echo "Options:"
   echo "  -n, --name          REQUIRED: Run name or deployment name - should be unique"
+  echo "  -p, --partition     REQUIRED: Avalible partition / hpc queue (epyc, defq, epyc_ssd)"
   echo "  -w, --work          Optional: working dir - default is current dir /work/"
-  echo "  -p, --partition     REQUIRED: Avalible partition / hpc queue (epyc, defq, jumbo, epyc_ssd)"
-  echo "  -k, --krakendb      Optional: Krakendb - default is k2_standard_08gb_20250402"
+  echo "  -k, --krakendb      Optional: Krakendb - default is k2_standard_08gb_20250402 - **DO NOT INCLUDE .tar.gz**"
+  echo "  -m, --metaphlandb   Optional: Metaphlandb - default is mpa_vJun23_CHOCOPhlAnSGB_202403 - ** DO NOT INCLUDE .tar**"
   echo "  -h, --help          Show this help message"
   exit 0
 }
 
 # Use `getopt` to parse options
-PARSED=$(getopt -o n:w:p:k:h --long name:,env:,port:,help -- "$@")
+PARSED=$(getopt -o n:p:w:k:m:h --long name:,partition:,work:,krakendb:,metaphlandb:,help -- "$@")
 if [[ $? -ne 0 ]]; then
   echo "Failed to parse options." >&2
   exit 1
@@ -48,6 +50,7 @@ while true; do
     -w|--work)  workdir="$2"; shift 2 ;;
     -p|--partition) PART="$2"; shift 2 ;;
     -k|--krakendb) krakendb="$2"; shift 2 ;;
+    -m|--metaphlandb) metaphlandb="$2"; shift 2 ;;
     -h|--help) print_help ;;
     --) shift; break ;;
     *) echo "Unexpected option: $1" >&2; exit 1 ;;
@@ -79,10 +82,12 @@ fi
 echo "Run name (unique): ${NAME}"
 echo "Partition: ${PART}"
 echo "Working directory: ${workdir}"
-echo "Kraken database: ${krakendb}" 
+echo "Kraken database: ${krakendb}"
+echo "Metaphlan database: ${metaphlandb}"
 
 #export arguements
 export NAME
 export PART
 export workdir
 export krakendb
+export metaphlandb

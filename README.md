@@ -3,7 +3,7 @@ A SLURM pipeline designed for comprehensive commmunity analysis based on classif
 
 ## Key Features
 
-- **Transcriptome Quality Assessment**: Ensures high-quality data processing with integrated quality checks.
+- **Read Quality Assessment**: Ensures high-quality data processing with integrated quality checks.
 - **Pre-processing**: Streamlines the handling of PE 150bp metagenomic data.
 - **Community analysis**: Read clasification via kraken (bracken) and metaphylan.
 - **Alpha Diversity Metrics**: Calculates Alpha Diversity metrics for both pipeline.
@@ -28,13 +28,14 @@ git clone git@github.com:Peter-Kille/metagenomic_slurm.git
 ```
 ./deploy.sh -h
 
-Usage: ./deploy.sh --name NAME [--env ENV] [--partition PARTITION]
+Usage: ./deploy.sh -n NAME -p PARTITION [-w work] [-k k2_standard_08gb_20250402] [-m mpa_vJun23_CHOCOPhlAnSGB_202403]
 
 Options:
   -n, --name          REQUIRED: Run name or deployment name - should be unique
+  -p, --partition     REQUIRED: Avalible partition / hpc queue (epyc, defq, epyc_ssd)
   -w, --work          Optional: working dir - default is current dir /work/
-  -p, --partition     Optional: Avalible partition / hpc queue (epyc, defq, jumbo, epyc_ssd)
-  -k, --kraken        Optional: Krakendb - default is "k2_standard_08gb_20250402" - **DO NOT INCLUDE .tar.gz** 
+  -k, --krakendb      Optional: [Krakendb](https://benlangmead.github.io/aws-indexes/k2) - default is "k2_standard_08gb_20250402" - **DO NOT INCLUDE .tar.gz** 
+  -m, --metaphlandb   Optional: [Metaphlandb](http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/) - default is "mpa_vJun23_CHOCOPhlAnSGB_202403" - ** DO NOT INCLUDE .tar**
   -h, --help          Show this help message
 
 ```

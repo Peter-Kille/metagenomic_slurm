@@ -19,4 +19,4 @@ cat $0
 
 module load ${metaphlan_module}
 
-metaphlan --install --bowtie2db ${metaphlandbdir}/
+metaphlan --install --index ${metaphlandb} --bowtie2db ${metaphlandbdir}/
