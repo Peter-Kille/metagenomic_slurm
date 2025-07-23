@@ -15,7 +15,7 @@ A SLURM pipeline designed for comprehensive commmunity analysis based on classif
 1. Install the metagenome_slurm resources into your HPC cluster directory in which you will be performing the assembly:  
 
 ```
-git clone git@github.com:Peter-Kille/metagenomic_slurm.git
+git clone https://github.com/Peter-Kille/metagenomic_slurm.git
 ```
 
 2. Put the raw reads in `raw_data` folder.  
