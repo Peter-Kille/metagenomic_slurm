@@ -35,7 +35,7 @@ Options:
   -p, --partition     REQUIRED: Avalible partition / hpc queue (epyc, defq, epyc_ssd)
   -w, --work          Optional: working dir - default is current dir /work/
   -k, --krakendb      Optional: [Krakendb](https://benlangmead.github.io/aws-indexes/k2) - default is "k2_standard_08gb_20250402" - **DO NOT INCLUDE .tar.gz** 
-  -m, --metaphlandb   Optional: [Metaphlandb](http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/) - default is "mpa_vJun23_CHOCOPhlAnSGB_202403" - ** DO NOT INCLUDE .tar**
+  -m, --metaphlandb   Optional: [Metaphlandb](http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/) - default is "mpa_vJan25_CHOCOPhlAnSGB_202503" - ** DO NOT INCLUDE .tar**
   -h, --help          Show this help message
 
 ```

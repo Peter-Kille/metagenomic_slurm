@@ -13,7 +13,7 @@ setwd(file.path(metaphlandir))
 
 required_pkg <- c("optparse", "ape", "rbiom", "compositions", "BiocManager")
 a <- sapply(required_pkg, function(x) {  if (!requireNamespace(x, quietly = TRUE))
-  install.packages(x, repos = "http://cran.us.r-project.org")
+  install.packages(x, repos = "https://cloud.r-project.org/")
 })
 if (! "microbiome" %in% installed.packages()){
   BiocManager::install("microbiome")

@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Step 1: Rename and Count
+
+# STEP 2A & C: fastqc
+fastqc_module="fastqc/0.12.1-luqvhcm"
+module is-avail ${fastqc_module} || { echo "${fastqc_module} not avalible check config.parameters_all file" ; exit 1; }
+export fastqc_module
+
+# STEP 2B: fastp
+fastp_module="fastp/0.23.4-mr6qifo"
+module is-avail ${fastp_module} || { echo "${fastp_module} not avalible check config.parameters_all file" ; exit 1; }
+export fastp_module
+
+# STEP 3:
+kraken_module="kraken2/2.1.1"
+module is-avail ${kraken_module} || { echo "${kraken_module} not avalible check config.parameters_all file" ; exit 1; }
+export kraken_module
+python_module="python/3.7.4"
+module is-avail ${python_module} || { echo "${python_module} not avalible check config.parameters_all file" ; exit 1; }
+export python_module
+
+# STEP 4: Bracken
+bracken_module="bracken/2.6.0"
+module is-avail ${bracken_module} || { echo "${bracken_module} not avalible check config.parameters_all file" ; exit 1; }
+python_module="python/3.7.4"
+module is-avail ${python_module} || { echo "${python_module} not avalible check config.parameters_all file" ; exit 1; }
+export python_module
+export bracken_module
+
+# STEP 5: Metaphylan
+metaphlan_module="py-metaphlan/4.2.2-2hf2j3j"
+module is-avail ${metaphlan_module} || { echo "${metaphlan_module} not avalible check config.parameters_all file" ; exit 1; }
+export metaphlan_module
+
+r_module="R/4.4.3"
+module is-avail ${r_module} || { echo "${r_module} not avalible check config.parameters_all file" ; exit 1; }
+export r_module
+
+# STEP 7: krona
+krona_module="krona/2.8"
+module is-avail ${krona_module} || { echo "${krona_module} not avalible check config.parameters_all file" ; exit 1; }
+export krona_module
+qiime_module="qiime2/2025.4-conda"
+module is-avail ${qiime_module} || { echo "${qiime_module} not avalible check config.parameters_all file" ; exit 1; }
+export qiime_module
+
+# STEP X:
+multiqc_module="multiqc/1.9"
+module is-avail ${multiqc_module} || { echo "${multiqc_module} not avalible check config.parameters_all file" ; exit 1; }
+export multiqc_module

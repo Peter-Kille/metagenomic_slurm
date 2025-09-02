@@ -32,6 +32,6 @@ Rscript modules/scripts/calculate_diversity.R -f ${NAME}_merged_abundance_table.
 #these are not working
 
 mkdir ${outdir}/metaphlan
-rm ${metaphlandir}/*.bowtie2.bz2
+#rm ${metaphlandir}/*.bowtie2.bz2
 cp ${metaphlandir}/* ${outdir}/metaphlan/
 cp -R ${metaphlandir}/diversity_analysis ${outdir}/metaphlan/

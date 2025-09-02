@@ -6,7 +6,7 @@ NAME=""
 PART=""
 workdir=$(pwd)/work
 krakendb="k2_standard_08gb_20250402"
-metaphlan=""
+metaphlandb="mpa_vJan25_CHOCOPhlAnSGB_202503"
 
 # Allowed environments
 VALID_PART=("epyc" "defq" "epyc_ssd" "epyc -w f02-14")
@@ -28,7 +28,7 @@ print_help() {
   echo "  -p, --partition     REQUIRED: Avalible partition / hpc queue (epyc, defq, epyc_ssd)"
   echo "  -w, --work          Optional: working dir - default is current dir /work/"
   echo "  -k, --krakendb      Optional: Krakendb - default is k2_standard_08gb_20250402 - **DO NOT INCLUDE .tar.gz**"
-  echo "  -m, --metaphlandb   Optional: Metaphlandb - default is mpa_vJun23_CHOCOPhlAnSGB_202403 - ** DO NOT INCLUDE .tar**"
+  echo "  -m, --metaphlandb   Optional: Metaphlandb - default is mpa_vJan25_CHOCOPhlAnSGB_202503 - ** DO NOT INCLUDE .tar**"
   echo "  -h, --help          Show this help message"
   exit 0
 }

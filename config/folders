@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# Define core parameters - rawdata, pipedir, moduledir, assembly_name
+# sourcedir="/path/to/rawreads/"
+pipedir=$(pwd -P)
+
+moduledir="${pipedir}/modules"
+scriptdir="${moduledir}/scripts"
+
+## Make workdir and output directories
+outdir="${pipedir}/outdir"
+log="${workdir}/log"
+singularitydir="${pipedir}/singularities"
+
+# Create Singularity cache directory in /tmp and set environment variables
+if [[ ! -d "${singularitydir}" ]]; then
+        mkdir -p "${singularitydir}"
+fi
+
+if [[ ! -d "${singularitydira}/cache" ]]; then
+        mkdir -p "${singularitydir}/cache"
+fi
+
+export APTAINERAPTAINER_CACHEDIR=${singularitydir}/cache
+export APPTAINER_CACHEDIR=${singularitydir}/cache
+
+#create output directories if not present
+
+if [[ ! -d ${workdir} ]]; then 
+	mkdir -p ${workdir}
+fi
+
+if [[ ! -d "${outdir}" ]]; then 
+	mkdir -p "${outdir}" 
+fi
+
+if [[ ! -d "${log}" ]]; then
+        mkdir -p "${log}"
+fi
+
+# Export core parameters
+export sourcedir
+export pipedir
+export workdir
+export outdir
+export moduledir
+export log
+export sample_number
+export singularitydir
+export scriptdir
+
+# Step 1: Rename and Count
+rawdir="${pipedir}/raw_data"
+if [[ ! -d "${rawdir}" ]]; then 
+	mkdir -p "${rawdir}" 
+fi
+export rawdir
+
+# STEP 2A: fastqc on raw data
+qcdir="${workdir}/rawqc" 
+if [[ ! -d "${qcdir}" ]]; then 
+	mkdir -p "${qcdir}" 
+fi
+export qcdir
+
+# STEP 2B: 
+trimdir="${workdir}/trim_files" 
+if [[ ! -d "${trimdir}" ]]; then 
+	mkdir -p "${trimdir}" 
+fi
+export trimdir
+
+#STEP 2C:
+trimqc="${workdir}/trimqc"
+if [[ ! -d "${trimqc}" ]]; then
+        mkdir -p "${trimqc}"
+fi
+export trimqc
+
+# STEP 3:
+krakendir="${workdir}/kraken"
+if [[ ! -d "${krakendir}" ]]; then
+        mkdir -p "${krakendir}"
+fi
+
+krakendbdir="${workdir}/kraken/db"
+if [[ ! -d "${krakendbdir}" ]]; then
+        mkdir -p "${krakendbdir}"
+fi
+export krakendir
+export krakendbdir
+
+# STEP 4:  Bracken
+brackendir="${workdir}/bracken"
+if [[ ! -d "${brackendir}" ]]; then
+        mkdir -p "${brackendir}"
+fi
+read_len=150
+export brackendir
+export read_len
+
+# STEP 5: Metaphlan
+metaphlandir="${workdir}/metaphlan"
+if [[ ! -d "${metaphlandir}" ]]; then
+        mkdir -p "${metaphlandir}"
+fi
+
+metaphlandbdir="${workdir}/metaphlan/db"
+if [[ ! -d "${metaphlandbdir}" ]]; then
+        mkdir -p "${metaphlandbdir}"
+fi
+
+RLib_dir="${pipedir}/R_Libs"
+if [[ ! -d "${RLib_dir}" ]]; then
+        mkdir -p "${RLib_dir}"
+fi
+
+export R_LIBS=${pipedir}/R_Libs/
+
+export metaphlandir
+export metaphlandbdir
+
+# STEP 6A & B: Krona
+kronadir="${workdir}/krona"
+if [[ ! -d "${kronadir}" ]]; then
+        mkdir -p "${kronadir}"
+fi
+
+export kronadir
+
+# STEP X:
+multiqcdir="${workdir}/multiqc"
+if [[ ! -d "${multiqcdir}" ]]; then
+        mkdir -p "${multiqcdir}"
+fi
+
+export multiqcdir
+
+
