@@ -21,6 +21,6 @@ module load ${python_module}
 
 python ${scriptdir}/kraken2_long_to_wide.py -i ${krakendir}/*.report -o ${krakendir}/${NAME}_kraken_analytic_matrix.csv
 
-rm -rf ${krakendir}/*.raw
+# rm -rf ${krakendir}/*.raw
 mkdir ${outdir}/kraken
 cp ${krakendir}/* ${outdir}/kraken/
