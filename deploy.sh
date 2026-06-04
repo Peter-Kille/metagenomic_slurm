@@ -48,7 +48,7 @@ sbatch -d singleton --error="${log}/2C-trimqc_%J.err" --output="${log}/2C-trimqc
 # export 
 sbatch -d singleton --error="${log}/3A-krakendb_%J.err" --output="${log}/3A-krakendb_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3A-krakendownload.sh"
 
-sbatch -d singleton --error="${log}/3B-kraken_%J.err" --output="${log}/3B-kraken_%J.out" --array="1-${sample_number}%2" --job-name=${NAME} --partition=${PART} "${moduledir}/3B-kraken_array.sh"
+sbatch -d singleton --error="${log}/3B-kraken_%J.err" --output="${log}/3B-kraken_%J.out" --array="1-${sample_number}%4" --job-name=${NAME} --partition=${PART} "${moduledir}/3B-kraken_array.sh"
 
 sbatch -d singleton --error="${log}/3C-kraken_merge_%J.err" --output="${log}/3D-kraken_merge_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3C-kraken_merge.sh"
 
