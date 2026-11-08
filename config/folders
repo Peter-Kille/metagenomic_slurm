@@ -59,7 +59,7 @@ export singularitydir
 export scriptdir
 
 # Step 1: Rename and Count
-rawdir="${pipedir}/1-raw_data"
+rawdir="${pipedir}/raw_data"
 if [[ ! -d "${rawdir}" ]]; then 
 	mkdir -p "${rawdir}" 
 fi
