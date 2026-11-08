@@ -39,12 +39,13 @@ if [[ ! -d "${log}" ]]; then
 fi
 
 # Record how the pipeline was launched (appended, so repeated deploys keep a history)
-{
+# (skipped inside the driver job, which re-runs the same command)
+if [[ -z "${PIPELINE_DRIVER}" ]]; then {
     echo "# $(date '+%Y-%m-%d %H:%M:%S') user=${USER} host=$(hostname)"
     echo "# cwd: $(pwd -P)"
     echo "${CMDLINE}"
     echo ""
-} >> "${log}/0_execution_commandline.txt"
+} >> "${log}/0_execution_commandline.txt"; fi
 
 # Export core parameters
 export sourcedir
