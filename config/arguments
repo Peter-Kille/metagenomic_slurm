@@ -1,15 +1,23 @@
 #!/bin/bash
 #arguments of parameters for metagenomic slurm pipeline
 
+# Capture the command line exactly as typed (must be before getopt/set -- changes the positional parameters);
+# it is written to the log directory by config/folders
+CMDLINE="$(printf '%q ' "$0" "$@")"
+export CMDLINE
+
 # Initialize variables
 NAME=""
 PART=""
 workdir=$(pwd)/work
 krakendb="k2_standard_08gb_20250402"
 metaphlandb="mpa_vJan25_CHOCOPhlAnSGB_202503"
+# Kraken2 stringency levels: --confidence values (space or comma separated) and min hit groups
+conf_levels="0.0 0.1 0.2 0.5"
+hit_groups=2
 
 # Allowed environments
-VALID_PART=("epyc" "defq" "epyc_ssd" "epyc -w f02-14")
+VALID_PART=("epyc" "defq" "epyc_ssd" "epyc -w f02-14" "epyc_bigram" "epyc_bigram -w c1-11" "epyc_bigram -w c1-35")
 
 # Validate partition
 validate_partition() {
@@ -25,16 +33,18 @@ print_help() {
   echo ""
   echo "Options:"
   echo "  -n, --name          REQUIRED: Run name or deployment name - should be unique"
-  echo "  -p, --partition     REQUIRED: Avalible partition / hpc queue (epyc, defq, epyc_ssd)"
+  echo "  -p, --partition     REQUIRED: Avalible partition / hpc queue (epyc, defq, epyc_ssd, epyc_bigram; pin a node with e.g. \"epyc_bigram -w c1-11\" or \"epyc_bigram -w c1-35\")"
   echo "  -w, --work          Optional: working dir - default is current dir /work/"
   echo "  -k, --krakendb      Optional: Krakendb - default is k2_standard_08gb_20250402 - **DO NOT INCLUDE .tar.gz**"
   echo "  -m, --metaphlandb   Optional: Metaphlandb - default is mpa_vJan25_CHOCOPhlAnSGB_202503 - ** DO NOT INCLUDE .tar**"
+  echo "  -c, --confidence    Optional: kraken2 --confidence levels, quoted list - default \"0.0 0.1 0.2 0.5\" (each 0-1)"
+  echo "  -g, --hitgroups     Optional: kraken2 --minimum-hit-groups for all levels - default 2"
   echo "  -h, --help          Show this help message"
   exit 0
 }
 
 # Use `getopt` to parse options
-PARSED=$(getopt -o n:p:w:k:m:h --long name:,partition:,work:,krakendb:,metaphlandb:,help -- "$@")
+PARSED=$(getopt -o n:p:w:k:m:c:g:h --long name:,partition:,work:,krakendb:,metaphlandb:,confidence:,hitgroups:,help -- "$@")
 if [[ $? -ne 0 ]]; then
   echo "Failed to parse options." >&2
   exit 1
@@ -51,6 +61,8 @@ while true; do
     -p|--partition) PART="$2"; shift 2 ;;
     -k|--krakendb) krakendb="$2"; shift 2 ;;
     -m|--metaphlandb) metaphlandb="$2"; shift 2 ;;
+    -c|--confidence) conf_levels="$2"; shift 2 ;;
+    -g|--hitgroups) hit_groups="$2"; shift 2 ;;
     -h|--help) print_help ;;
     --) shift; break ;;
     *) echo "Unexpected option: $1" >&2; exit 1 ;;
@@ -78,12 +90,27 @@ if [[ -n "$PART" ]] && ! validate_partition "$PART"; then
   exit 1
 fi
 
+# Validate stringency levels: normalise commas to spaces, each must be a number in [0,1]
+conf_levels="${conf_levels//,/ }"
+for c in ${conf_levels}; do
+  if ! [[ "$c" =~ ^(0(\.[0-9]+)?|1(\.0+)?)$ ]]; then
+    echo "Error: invalid --confidence value '$c' (must be 0-1)."
+    exit 1
+  fi
+done
+if ! [[ "${hit_groups}" =~ ^[0-9]+$ ]]; then
+  echo "Error: --hitgroups must be a non-negative integer."
+  exit 1
+fi
+
 # Output arguments
 echo "Run name (unique): ${NAME}"
 echo "Partition: ${PART}"
 echo "Working directory: ${workdir}"
 echo "Kraken database: ${krakendb}"
 echo "Metaphlan database: ${metaphlandb}"
+echo "Kraken2 confidence levels: ${conf_levels}"
+echo "Kraken2 minimum hit groups: ${hit_groups}"
 
 #export arguements
 export NAME
@@ -91,3 +118,5 @@ export PART
 export workdir
 export krakendb
 export metaphlandb
+export conf_levels
+export hit_groups

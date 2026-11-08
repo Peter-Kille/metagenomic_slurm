@@ -17,5 +17,9 @@ echo "\$SLURM_MEM_PER_CPU=${SLURM_MEM_PER_CPU}"
 # Write jobscript to output file (good for reproducibility)
 cat $0
 
-mkdir ${outdir}/krona
-cp ${kronadir}/*.html ${outdir}/krona/
+mkdir -p ${outdir}/krona
+# kraken krona plots live in per-level folders; metaphlan plots sit directly in ${kronadir}
+for conf in ${conf_levels}; do
+    mkdir -p ${outdir}/krona/conf${conf}
+    cp ${kronadir}/conf${conf}/*.html ${outdir}/krona/conf${conf}/
+done

@@ -31,7 +31,8 @@ Rscript modules/scripts/calculate_diversity.R -f ${NAME}_merged_abundance_table.
 #beta diversity
 #these are not working
 
-mkdir ${outdir}/metaphlan
+mkdir -p ${outdir}/metaphlan
 #rm ${metaphlandir}/*.bowtie2.bz2
-cp ${metaphlandir}/* ${outdir}/metaphlan/
+# copy results but not the large alignment files (*.bz2: bowtie2 mapout and SAM)
+find ${metaphlandir} -maxdepth 1 -type f ! -name "*.bz2" -exec cp {} ${outdir}/metaphlan/ \;
 cp -R ${metaphlandir}/diversity_analysis ${outdir}/metaphlan/

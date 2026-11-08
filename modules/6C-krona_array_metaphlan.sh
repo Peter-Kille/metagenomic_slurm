@@ -30,3 +30,17 @@ biom convert -i ${metaphlandir}/${base}.biom -o ${kronadir}/${base}_metaphlan_ta
 tail -n +2 ${kronadir}/${base}_metaphlan_table.txt | cut -f2- | sed 's/; /\t/g' > ${kronadir}/${base}_metaphlan_krona_input.txt
 
 ktImportText ${kronadir}/${base}_metaphlan_krona_input.txt -o ${kronadir}/${base}_metaphlan.krona.html
+
+# viral profile (5C): same conversion; skip cleanly if the viral biom is absent or has no taxonomy
+vbiom=${metaphlandir}/${base}.metavirus.biom
+if [[ -s ${vbiom} ]]; then
+    biom convert -i ${vbiom} -o ${kronadir}/${base}_metaphlan_viral_table.txt --to-tsv --header-key taxonomy
+    tail -n +2 ${kronadir}/${base}_metaphlan_viral_table.txt | cut -f2- | sed 's/; /\t/g' > ${kronadir}/${base}_metaphlan_viral_krona_input.txt
+    if [[ -s ${kronadir}/${base}_metaphlan_viral_krona_input.txt ]]; then
+        ktImportText ${kronadir}/${base}_metaphlan_viral_krona_input.txt -o ${kronadir}/${base}_metaphlan_viral.krona.html
+    else
+        echo "WARNING: no taxonomy rows in ${vbiom} - viral krona not made" >&2
+    fi
+else
+    echo "WARNING: ${vbiom} not found - viral krona not made" >&2
+fi

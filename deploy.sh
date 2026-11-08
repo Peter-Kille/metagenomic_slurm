@@ -52,6 +52,9 @@ sbatch -d singleton --error="${log}/3B-kraken_%J.err" --output="${log}/3B-kraken
 
 sbatch -d singleton --error="${log}/3C-kraken_merge_%J.err" --output="${log}/3D-kraken_merge_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3C-kraken_merge.sh"
 
+# Step 3D: stringency summary across confidence levels (see README: choosing a stringency)
+sbatch -d singleton --error="${log}/3D-kraken_stringency_%J.err" --output="${log}/3D-kraken_stringency_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3D-kraken_stringency_summary.sh"
+
 # Step 4: Bracken
 # Normalise kraken read counts
 # CORE PARAMETERS: modules, rawdir, trimdir, log
@@ -76,7 +79,9 @@ sbatch -d singleton --error="${log}/5A-metaphlandb_%J.err" --output="${log}/5A-m
 
 sbatch -d singleton --error="${log}/5B-metaphlan_%J.err" --output="${log}/5B-metaphlan_%J.out" --array="1-${sample_number}%8" --job-name=${NAME} --partition=${PART} "${moduledir}/5B-metaphlan_array.sh"
 
-sbatch -d singleton --error="${log}/5C-metaphlan_post_%J.err" --output="${log}/5C-metaphlan_post_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/5C-metaphan_post.sh"
+sbatch -d singleton --error="${log}/5C-metaphlan_viral_%J.err" --output="${log}/5C-metaphlan_viral_%J.out" --array="1-${sample_number}%8" --job-name=${NAME} --partition=${PART} "${moduledir}/5C-metaphlan_viral_array.sh"
+
+sbatch -d singleton --error="${log}/5D-metaphlan_post_%J.err" --output="${log}/5D-metaphlan_post_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/5D-metaphlan_post.sh"
 
 # Step 6: krona plots creation
 # Normalise kraken read counts

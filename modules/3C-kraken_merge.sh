@@ -19,8 +19,14 @@ cat $0
 
 module load ${python_module}
 
-python ${scriptdir}/kraken2_long_to_wide.py -i ${krakendir}/*.report -o ${krakendir}/${NAME}_kraken_analytic_matrix.csv
+for conf in ${conf_levels}; do
+    outsub="${krakendir}/conf${conf}"
+    # run inside the level folder: kraken2_long_to_wide.py writes kraken_unclassifieds.csv to the cwd
+    ( cd ${outsub} && python ${scriptdir}/kraken2_long_to_wide.py -i ${outsub}/*.report -o ${outsub}/${NAME}_kraken_analytic_matrix.csv )
+done
 
-# rm -rf ${krakendir}/*.raw
-mkdir ${outdir}/kraken
-cp ${krakendir}/* ${outdir}/kraken/
+# copy per-level results (not the database folder)
+mkdir -p ${outdir}/kraken
+for conf in ${conf_levels}; do
+    cp -r ${krakendir}/conf${conf} ${outdir}/kraken/
+done

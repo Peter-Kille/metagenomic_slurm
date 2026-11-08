@@ -20,3 +20,8 @@ cat $0
 module load ${metaphlan_module}
 
 metaphlan --install --index ${metaphlandb} --db_dir ${metaphlandbdir}
+
+# sanity check: viral (VSC) files needed by 5C
+if ! ls ${metaphlandbdir} | grep -qi vsg; then
+    echo "WARNING: no *VSG* file found in ${metaphlandbdir} - viral profiling (5C) will fail" >&2
+fi

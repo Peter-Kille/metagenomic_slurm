@@ -25,10 +25,15 @@ file=$(ls "${rawdir}"/*_1.fastq.gz | sed -n ${SLURM_ARRAY_TASK_ID}p)
 R1=$(basename $file | cut -f1 -d.)
 base=$(echo $R1 | sed 's/_1$//')
 
-python ${scriptdir}/kreport2krona.py -r ${krakendir}/${base}.kraken.report -o ${kronadir}/${base}_kraken.krona
-ktImportText ${kronadir}/${base}_kraken.krona -o ${kronadir}/${base}_kraken.krona.html
+for conf in ${conf_levels}; do
+    kreport=${krakendir}/conf${conf}/${base}.kraken.report
+    ksub=${kronadir}/conf${conf}
+    mkdir -p ${ksub}
 
-##generate mpa reports
-python ${scriptdir}/kreport2mpa.py -r ${krakendir}/${base}.kraken.report -o ${krakendir}/${base}_kraken_MPA_count.txt
-python ${scriptdir}/kreport2mpa.py --percentages -r ${krakendir}/${base}.kraken.report -o ${krakendir}/${base}_kraken_MPA_per.txt
- 
+    python ${scriptdir}/kreport2krona.py -r ${kreport} -o ${ksub}/${base}_kraken.krona
+    ktImportText ${ksub}/${base}_kraken.krona -o ${ksub}/${base}_kraken.krona.html
+
+    ##generate mpa reports
+    python ${scriptdir}/kreport2mpa.py -r ${kreport} -o ${krakendir}/conf${conf}/${base}_kraken_MPA_count.txt
+    python ${scriptdir}/kreport2mpa.py --percentages -r ${kreport} -o ${krakendir}/conf${conf}/${base}_kraken_MPA_per.txt
+done

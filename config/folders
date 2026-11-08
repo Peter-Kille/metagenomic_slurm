@@ -9,7 +9,7 @@ scriptdir="${moduledir}/scripts"
 
 ## Make workdir and output directories
 outdir="${pipedir}/outdir"
-log="${workdir}/log"
+log="${workdir}/0-log"
 singularitydir="${pipedir}/singularities"
 
 # Create Singularity cache directory in /tmp and set environment variables
@@ -38,6 +38,14 @@ if [[ ! -d "${log}" ]]; then
         mkdir -p "${log}"
 fi
 
+# Record how the pipeline was launched (appended, so repeated deploys keep a history)
+{
+    echo "# $(date '+%Y-%m-%d %H:%M:%S') user=${USER} host=$(hostname)"
+    echo "# cwd: $(pwd -P)"
+    echo "${CMDLINE}"
+    echo ""
+} >> "${log}/0_execution_commandline.txt"
+
 # Export core parameters
 export sourcedir
 export pipedir
@@ -50,40 +58,40 @@ export singularitydir
 export scriptdir
 
 # Step 1: Rename and Count
-rawdir="${pipedir}/raw_data"
+rawdir="${pipedir}/1-raw_data"
 if [[ ! -d "${rawdir}" ]]; then 
 	mkdir -p "${rawdir}" 
 fi
 export rawdir
 
 # STEP 2A: fastqc on raw data
-qcdir="${workdir}/rawqc" 
+qcdir="${workdir}/2A-rawqc" 
 if [[ ! -d "${qcdir}" ]]; then 
 	mkdir -p "${qcdir}" 
 fi
 export qcdir
 
 # STEP 2B: 
-trimdir="${workdir}/trim_files" 
+trimdir="${workdir}/3B-trim" 
 if [[ ! -d "${trimdir}" ]]; then 
 	mkdir -p "${trimdir}" 
 fi
 export trimdir
 
 #STEP 2C:
-trimqc="${workdir}/trimqc"
+trimqc="${workdir}/2C-trimqc"
 if [[ ! -d "${trimqc}" ]]; then
         mkdir -p "${trimqc}"
 fi
 export trimqc
 
 # STEP 3:
-krakendir="${workdir}/kraken"
+krakendir="${workdir}/3-kraken"
 if [[ ! -d "${krakendir}" ]]; then
         mkdir -p "${krakendir}"
 fi
 
-krakendbdir="${workdir}/kraken/db"
+krakendbdir="${workdir}/3-kraken/db"
 if [[ ! -d "${krakendbdir}" ]]; then
         mkdir -p "${krakendbdir}"
 fi
@@ -91,21 +99,25 @@ export krakendir
 export krakendbdir
 
 # STEP 4:  Bracken
-brackendir="${workdir}/bracken"
+brackendir="${workdir}/4-bracken"
 if [[ ! -d "${brackendir}" ]]; then
         mkdir -p "${brackendir}"
 fi
 read_len=150
+# minimum reads for a taxon to be kept by bracken (-t). NB: previously this was
+# accidentally set to ${SLURM_CPUS_PER_TASK} (=8); 8 preserves the old behaviour.
+bracken_min_reads=8
 export brackendir
 export read_len
+export bracken_min_reads
 
 # STEP 5: Metaphlan
-metaphlandir="${workdir}/metaphlan"
+metaphlandir="${workdir}/5-metaphlan"
 if [[ ! -d "${metaphlandir}" ]]; then
         mkdir -p "${metaphlandir}"
 fi
 
-metaphlandbdir="${workdir}/metaphlan/db"
+metaphlandbdir="${workdir}/5-metaphlan/db"
 if [[ ! -d "${metaphlandbdir}" ]]; then
         mkdir -p "${metaphlandbdir}"
 fi
@@ -121,7 +133,7 @@ export metaphlandir
 export metaphlandbdir
 
 # STEP 6A & B: Krona
-kronadir="${workdir}/krona"
+kronadir="${workdir}/6-krona"
 if [[ ! -d "${kronadir}" ]]; then
         mkdir -p "${kronadir}"
 fi
@@ -129,7 +141,7 @@ fi
 export kronadir
 
 # STEP X:
-multiqcdir="${workdir}/multiqc"
+multiqcdir="${workdir}/7-multiqc"
 if [[ ! -d "${multiqcdir}" ]]; then
         mkdir -p "${multiqcdir}"
 fi

@@ -19,29 +19,29 @@ cat $0
 
 module load ${python_module}
 
-python ${scriptdir}/combine_bracken_outputs.py --files ${brackendir}/*_species.bracken.tsv -o ${brackendir}/${NAME}_bracken_analytic_matrix_species.csv
+for conf in ${conf_levels}; do
+    outsub="${brackendir}/conf${conf}"
 
-python ${scriptdir}/combine_bracken_outputs.py --files ${brackendir}/*_genus.bracken.tsv -o ${brackendir}/${NAME}_bracken_analytic_matrix_genus.csv
+    for lvl in species genus family; do
+        python ${scriptdir}/combine_bracken_outputs.py --files ${outsub}/*_${lvl}.bracken.tsv -o ${outsub}/${NAME}_bracken_analytic_matrix_${lvl}.csv
+    done
 
-python ${scriptdir}/combine_bracken_outputs.py --files ${brackendir}/*_family.bracken.tsv -o ${brackendir}/${NAME}_bracken_analytic_matrix_family.csv
+    # alpha diversity (species level); start clean so reruns don't append duplicates
+    for div in Sh BP Si ISi F; do : > ${outsub}/${div}_diversity.txt; done
 
-for div in Sh BP Si ISi F; do touch ${brackendir}/${div}_diversity.txt; done
+    for file in "${rawdir}"/*_1.fastq.gz
+    do
+        R1=$(basename $file | cut -f1 -d.)
+        base=$(echo $R1 | sed 's/_1$//')
 
-for file in "${rawdir}"/*_1.fastq.gz 
-do
-
-R1=$(basename $file | cut -f1 -d.)
-base=$(echo $R1 | sed 's/_1$//')
-
-for div in Sh BP Si ISi F; do
-
-printf "${base}\t" >> ${brackendir}/${div}_diversity.txt
-
-python modules/scripts/KrakenTools/KrakenTools/DiversityTools/alpha_diversity.py -f ${brackendir}/${base}_species.bracken.tsv -a ${div} >> ${brackendir}/${div}_diversity.txt
-
+        for div in Sh BP Si ISi F; do
+            printf "${base}\t" >> ${outsub}/${div}_diversity.txt
+            python modules/scripts/KrakenTools/KrakenTools/DiversityTools/alpha_diversity.py -f ${outsub}/${base}_species.bracken.tsv -a ${div} >> ${outsub}/${div}_diversity.txt
+        done
+    done
 done
 
+mkdir -p ${outdir}/bracken
+for conf in ${conf_levels}; do
+    cp -r ${brackendir}/conf${conf} ${outdir}/bracken/
 done
-
-mkdir ${outdir}/bracken
-cp ${brackendir}/* ${outdir}/bracken/

@@ -24,27 +24,17 @@ file=$(ls "${rawdir}"/*_1.fastq.gz | sed -n ${SLURM_ARRAY_TASK_ID}p)
 R1=$(basename $file | cut -f1 -d.)
 base=$(echo $R1 | sed 's/_1$//')
 
-bracken -d ${krakendbdir} \
-	-t ${SLURM_CPUS_PER_TASK} \
-        -r ${read_len} \
-        -i ${krakendir}/${base}.kraken.report \
-        -l S \
-        -o ${brackendir}/${base}_species.bracken.tsv
+for conf in ${conf_levels}; do
+    outsub="${brackendir}/conf${conf}"
+    mkdir -p "${outsub}"
 
-bracken -d ${krakendbdir} \
-        -t ${SLURM_CPUS_PER_TASK} \
-        -r ${read_len} \
-        -i ${krakendir}/${base}.kraken.report \
-        -l G \
-        -o ${brackendir}/${base}_genus.bracken.tsv
-
-bracken -d ${krakendbdir} \
-        -t ${SLURM_CPUS_PER_TASK} \
-        -r ${read_len} \
-        -i ${krakendir}/${base}.kraken.report \
-        -l F \
-        -o ${brackendir}/${base}_family.bracken.tsv
-
-
-
-
+    # NB: bracken -t is the minimum-read threshold (not threads)
+    for lvl in S:species G:genus F:family; do
+        bracken -d ${krakendbdir} \
+                -t ${bracken_min_reads} \
+                -r ${read_len} \
+                -i ${krakendir}/conf${conf}/${base}.kraken.report \
+                -l ${lvl%%:*} \
+                -o ${outsub}/${base}_${lvl##*:}.bracken.tsv
+    done
+done
