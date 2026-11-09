@@ -47,6 +47,15 @@ Options:
 - All the relevent outputs will be stored in `outdir` folder, and outputs for every individual steps in the pipeline can be found in `workdir`.
 
 Prof Peter Kille - kille@cardiff.cf.ac.uk
+
+## Pipeline design guide
+[**PIPELINE_GUIDE.md**](PIPELINE_GUIDE.md) explains how the pipeline is built, with diagrams: the config and module layers, how variables reach the jobs, array jobs, the driver job, the `run()` function and done markers, parallel preparation stages, shared databases and monitoring. A downloadable version with standalone graphics is in [`guide.html`](guide.html).
+
+To build a new pipeline on the same pattern, see the general [Slurm pipeline guide](https://github.com/Peter-Kille/slurm_pipeline_guide).
+
+## Shared database library
+Steps `3A` and `5A` first look for the database in `resources_dir` (set in `config/arguments`, default `/mnt/ecotox/GROUP-smbpk/resources`) under `kraken/<-k name>/` and `metaphlan/<-m name>/`. If it is there it is symlinked into the work folder; otherwise it is downloaded. Folder names must match the `-k` / `-m` strings exactly.
+
 ## Stringency levels
 Kraken2 is run once per `--confidence` level (`-c`), and bracken, krona and diversity outputs are produced for each level in `conf<level>/` subfolders (e.g. `outdir/bracken/conf0.2/`). `3D` writes `<NAME>_kraken_stringency_summary.tsv` (classification rate, reads resolved to species/genus, richness, domain composition and species-set similarity to the least stringent level, per sample and level) to help choose a level. Choose levels with a blank/mock community in mind: the best level is the one where blank-derived taxa disappear while expected taxa are retained.
 ## Running as a driver job
