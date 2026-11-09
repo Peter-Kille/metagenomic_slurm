@@ -31,21 +31,32 @@ fi
 # the child sbatch calls must not inherit the driver's own memory request (conflicts with --mem-per-cpu in the modules)
 unset SLURM_MEM_PER_NODE SLURM_MEM_PER_CPU SLURM_MEM_PER_GPU
 
-# run <sbatch args...> <module script>: submit one stage, wait for it, stop the pipeline if it failed
+# Usage: run STEP_NAME  <sbatch options...>  <module script>
+# Submits one stage, waits for it to finish, and stops the pipeline if it failed.
+# STEP_NAME is a label (we use the module's filename without .sh); it names the done-marker file.
 run() {
-    local script="${@: -1}"
-    local step
-    step=$(basename "${script}" .sh)
-    if [[ -e "${workdir}/.done_${step}" ]]; then
-        echo "$(date '+%F %T') SKIP   ${step} (done marker found)"
+    step_name="$1"       # first argument: a label for this stage
+    shift                # remove it, leaving only the sbatch arguments
+
+    marker="${workdir}/.done_${step_name}"
+
+    # 1. Already finished in an earlier run? Then skip it.
+    if [ -e "$marker" ]; then
+        echo "$(date '+%F %T') SKIP   ${step_name} (done marker found)"
         return 0
     fi
-    echo "$(date '+%F %T') SUBMIT ${step}"
-    if sbatch --wait "$@"; then
-        touch "${workdir}/.done_${step}"
-        echo "$(date '+%F %T') DONE   ${step}"
+
+    # 2. Submit the job and wait until it finishes.
+    echo "$(date '+%F %T') SUBMIT ${step_name}"
+    sbatch --wait "$@"
+    exit_code=$?
+
+    # 3. Success: leave a marker. Failure: stop everything.
+    if [ "$exit_code" -eq 0 ]; then
+        touch "$marker"
+        echo "$(date '+%F %T') DONE   ${step_name}"
     else
-        echo "$(date '+%F %T') FAILED ${step} - stopping the pipeline (see ${log}/)" >&2
+        echo "$(date '+%F %T') FAILED ${step_name} - stopping the pipeline (see ${log}/)" >&2
         exit 1
     fi
 }
@@ -56,7 +67,7 @@ run() {
 # WORK: rawdir
 # OUTPUT: null
 # PROCESS - File transfer
-run --error="${log}/1-rename_count_%J.err" --output="${log}/1-rename_count_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/1-rename.sh"
+run 1-rename --error="${log}/1-rename_count_%J.err" --output="${log}/1-rename_count_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/1-rename.sh"
 
 # Get number of samples (step 1 has finished by now, because run() waits)
 sample_number=$(find "${rawdir}" -maxdepth 1 -name "*_1.fastq.gz" | wc -l)
@@ -82,16 +93,16 @@ fi
 # (each branch is a background subshell: a failing stage ends its own branch with a non-zero status)
 prep_pids=()
 (
-run --error="${log}/2A-rawqc_%J.err" --output="${log}/2A-rawqc_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/2A-fastqc_array.sh"
-run --error="${log}/2B-fastp_%J.err" --output="${log}/2B-fastp_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/2B-fastp_array.sh"
-run --error="${log}/2C-trimqc_%J.err" --output="${log}/2C-trimqc_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/2C-fastqc-trim.sh"
+run 2A-fastqc_array --error="${log}/2A-rawqc_%J.err" --output="${log}/2A-rawqc_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/2A-fastqc_array.sh"
+run 2B-fastp_array --error="${log}/2B-fastp_%J.err" --output="${log}/2B-fastp_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/2B-fastp_array.sh"
+run 2C-fastqc-trim --error="${log}/2C-trimqc_%J.err" --output="${log}/2C-trimqc_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/2C-fastqc-trim.sh"
 ) &
 prep_pids+=($!)
 
-run --error="${log}/3A-krakendb_%J.err" --output="${log}/3A-krakendb_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3A-krakendownload.sh" &
+run 3A-krakendownload --error="${log}/3A-krakendb_%J.err" --output="${log}/3A-krakendb_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3A-krakendownload.sh" &
 prep_pids+=($!)
 
-run --error="${log}/5A-metaphlandb_%J.err" --output="${log}/5A-metaphlandb_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/5A-metaphlandb_download.sh" &
+run 5A-metaphlandb_download --error="${log}/5A-metaphlandb_%J.err" --output="${log}/5A-metaphlandb_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/5A-metaphlandb_download.sh" &
 prep_pids+=($!)
 
 prep_failed=0
@@ -110,12 +121,12 @@ fi
 # OUTPUT: null
 # PROCESS - map raw reads against database for biodiversoty classification
 # export 
-run --error="${log}/3B-kraken_%J.err" --output="${log}/3B-kraken_%J.out" --array="1-${sample_number}%4" --job-name=${NAME} --partition=${PART} "${moduledir}/3B-kraken_array.sh"
+run 3B-kraken_array --error="${log}/3B-kraken_%J.err" --output="${log}/3B-kraken_%J.out" --array="1-${sample_number}%4" --job-name=${NAME} --partition=${PART} "${moduledir}/3B-kraken_array.sh"
 
-run --error="${log}/3C-kraken_merge_%J.err" --output="${log}/3C-kraken_merge_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3C-kraken_merge.sh"
+run 3C-kraken_merge --error="${log}/3C-kraken_merge_%J.err" --output="${log}/3C-kraken_merge_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3C-kraken_merge.sh"
 
 # Step 3D: stringency summary across confidence levels (see README: choosing a stringency)
-run --error="${log}/3D-kraken_stringency_%J.err" --output="${log}/3D-kraken_stringency_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3D-kraken_stringency_summary.sh"
+run 3D-kraken_stringency_summary --error="${log}/3D-kraken_stringency_%J.err" --output="${log}/3D-kraken_stringency_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/3D-kraken_stringency_summary.sh"
 
 # Step 4: Bracken
 # Normalise kraken read counts
@@ -125,9 +136,9 @@ run --error="${log}/3D-kraken_stringency_%J.err" --output="${log}/3D-kraken_stri
 # OUTPUT: null
 # PROCESS - Normalise kraken read counts
 # export
-run --error="${log}/4A-bracken_%J.err" --output="${log}/4A-bracken_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/4A-bracken_array.sh"
+run 4A-bracken_array --error="${log}/4A-bracken_%J.err" --output="${log}/4A-bracken_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/4A-bracken_array.sh"
 
-run --error="${log}/4B-bracken_merge_%J.err" --output="${log}/4B-bracken_merge_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/4B-bracken_merge.sh"
+run 4B-bracken_merge --error="${log}/4B-bracken_merge_%J.err" --output="${log}/4B-bracken_merge_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/4B-bracken_merge.sh"
 
 # Step 5: MetaPhlAn (database already installed by 5A in the concurrent block above)
 # Map reads to database.
@@ -137,11 +148,11 @@ run --error="${log}/4B-bracken_merge_%J.err" --output="${log}/4B-bracken_merge_%
 # OUTPUT: null
 # PROCESS - map raw reads against database for biodiversoty classification
 # export
-run --error="${log}/5B-metaphlan_%J.err" --output="${log}/5B-metaphlan_%J.out" --array="1-${sample_number}%8" --job-name=${NAME} --partition=${PART} "${moduledir}/5B-metaphlan_array.sh"
+run 5B-metaphlan_array --error="${log}/5B-metaphlan_%J.err" --output="${log}/5B-metaphlan_%J.out" --array="1-${sample_number}%8" --job-name=${NAME} --partition=${PART} "${moduledir}/5B-metaphlan_array.sh"
 
-run --error="${log}/5C-metaphlan_viral_%J.err" --output="${log}/5C-metaphlan_viral_%J.out" --array="1-${sample_number}%8" --job-name=${NAME} --partition=${PART} "${moduledir}/5C-metaphlan_viral_array.sh"
+run 5C-metaphlan_viral_array --error="${log}/5C-metaphlan_viral_%J.err" --output="${log}/5C-metaphlan_viral_%J.out" --array="1-${sample_number}%8" --job-name=${NAME} --partition=${PART} "${moduledir}/5C-metaphlan_viral_array.sh"
 
-run --error="${log}/5D-metaphlan_post_%J.err" --output="${log}/5D-metaphlan_post_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/5D-metaphlan_post.sh"
+run 5D-metaphlan_post --error="${log}/5D-metaphlan_post_%J.err" --output="${log}/5D-metaphlan_post_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/5D-metaphlan_post.sh"
 
 # Step 6: krona plots creation
 # Normalise kraken read counts
@@ -151,13 +162,13 @@ run --error="${log}/5D-metaphlan_post_%J.err" --output="${log}/5D-metaphlan_post
 # OUTPUT: html
 # PROCESS - Intercation krona diversity plaot
 # export
-run --error="${log}/6A-krona_%J.err" --output="${log}/6A-krona_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/6A-krona_array_kraken.sh"
+run 6A-krona_array_kraken --error="${log}/6A-krona_%J.err" --output="${log}/6A-krona_%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/6A-krona_array_kraken.sh"
 
-run --error="${log}/6B-krona_output_%J.err" --output="${log}/6B-krona_output_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/6B-krona_kraken_output.sh"
+run 6B-krona_kraken_output --error="${log}/6B-krona_output_%J.err" --output="${log}/6B-krona_output_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/6B-krona_kraken_output.sh"
 
-run --error="${log}/6C-krona_metaphlan%J.err" --output="${log}/6C-krona_metaphlan%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/6C-krona_array_metaphlan.sh"
+run 6C-krona_array_metaphlan --error="${log}/6C-krona_metaphlan%J.err" --output="${log}/6C-krona_metaphlan%J.out" --array="1-${sample_number}%20" --job-name=${NAME} --partition=${PART} "${moduledir}/6C-krona_array_metaphlan.sh"
 
-run --error="${log}/6D-krona_metaphylan_output_%J.err" --output="${log}/6D-krona_metaphylan_output_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/6D-krona_metaphlan_output.sh"
+run 6D-krona_metaphlan_output --error="${log}/6D-krona_metaphylan_output_%J.err" --output="${log}/6D-krona_metaphylan_output_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/6D-krona_metaphlan_output.sh"
 
 # Step X: MultiQC report
 # -- Generate a MultiQC report to summarize the results of all previous steps.
@@ -166,5 +177,5 @@ run --error="${log}/6D-krona_metaphylan_output_%J.err" --output="${log}/6D-krona
 # WORK: multiqc
 # OUTPUT: multiqc
 # PROCESS - multiqc
-run --error="${log}/multiqc_%J.err" --output="${log}/multiqc_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/X-multiqc.sh"
+run X-multiqc --error="${log}/multiqc_%J.err" --output="${log}/multiqc_%J.out" --job-name=${NAME} --partition=${PART} "${moduledir}/X-multiqc.sh"
 

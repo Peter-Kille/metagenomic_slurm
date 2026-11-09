@@ -17,6 +17,22 @@ echo "\$SLURM_MEM_PER_CPU=${SLURM_MEM_PER_CPU}"
 # Write jobscript to output file (good for reproducibility)
 cat $0
 
-wget -P ${krakendbdir}/ https://genome-idx.s3.amazonaws.com/kraken/${krakendb}.tar.gz
-tar -xvzf ${krakendbdir}/${krakendb}.tar.gz -C ${krakendbdir}/
-rm ${krakendbdir}/${krakendb}.tar.gz
+# Is this database already in the shared resources folder?  (<resources_dir>/kraken/<version name>/)
+shared_db="${resources_dir}/kraken/${krakendb}"
+
+if [[ -s "${shared_db}/hash.k2d" && -s "${shared_db}/opts.k2d" && -s "${shared_db}/taxo.k2d" ]]; then
+    # YES: link each file/folder into the work db folder instead of copying ~100 GB
+    echo "Found ${krakendb} in ${shared_db} - linking, not downloading"
+    for item in "${shared_db}"/*; do
+        ln -sfn "${item}" "${krakendbdir}/$(basename "${item}")"
+    done
+    if [[ ! -e "${shared_db}/database150mers.kmer_distrib" ]]; then
+        echo "WARNING: no database150mers.kmer_distrib in ${shared_db} - bracken (4A) will fail for 150 bp reads" >&2
+    fi
+else
+    # NO: download from the Langmead indexes as before
+    echo "${krakendb} not found in ${shared_db} - downloading"
+    wget -P ${krakendbdir}/ https://genome-idx.s3.amazonaws.com/kraken/${krakendb}.tar.gz
+    tar -xvzf ${krakendbdir}/${krakendb}.tar.gz -C ${krakendbdir}/
+    rm ${krakendbdir}/${krakendb}.tar.gz
+fi

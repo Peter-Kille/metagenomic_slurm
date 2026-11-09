@@ -12,6 +12,9 @@ PART=""
 workdir=$(pwd)/work
 krakendb="k2_standard_08gb_20250402"
 metaphlandb="mpa_vJan25_CHOCOPhlAnSGB_202503"
+# Shared database library: <resources_dir>/kraken/<-k name>/ and <resources_dir>/metaphlan/<-m name>/
+# (steps 3A / 5A link from here if the database exists, otherwise they download)
+resources_dir="/mnt/ecotox/GROUP-smbpk/resources"
 # Kraken2 stringency levels: --confidence values (space or comma separated) and min hit groups
 conf_levels="0.0 0.1 0.2 0.5"
 hit_groups=2
@@ -128,6 +131,7 @@ export PART
 export workdir
 export krakendb
 export metaphlandb
+export resources_dir
 export conf_levels
 export hit_groups
 export driver_part
